@@ -1,0 +1,21 @@
+# Input data (never commit images or masks)
+data/*
+!data/README.md
+
+# Notebook / Python artefacts
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Outputs
+results_fcm/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
