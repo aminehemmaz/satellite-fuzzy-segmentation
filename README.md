@@ -39,6 +39,85 @@ The work covers the full scientific pipeline: state of the art on satellites, re
 | **Evaluation** | Pixel accuracy after optimal (Hungarian) label matching, for k = 2 … 6 |
 | **Best setting** | k = 4 clusters → **52.55 %** accuracy |
 
+### Motivation
+
+Earth-observation satellites produce enormous volumes of imagery used for agriculture, forestry, urban planning, climate monitoring and disaster management. Turning raw pixels into regions (water, fields, built-up areas, bare land) is the first step of most of these applications. Supervised methods need large annotated datasets; **unsupervised clustering** needs none. And because natural boundaries are gradual (a shoreline, a crop edge, a shadow), a **soft** assignment is more faithful than a hard one.
+
+### Objectives
+
+1. Understand and document the **foundations**: satellites, sensors, remote sensing, image segmentation, fuzzy logic.
+2. **Implement Fuzzy C-Means from scratch** and validate it on a synthetic image.
+3. **Apply it to a real satellite tile** and **measure** the result against a pixel-level ground truth.
+4. **Study the influence of the number of clusters** `k` on convergence, accuracy and visual quality.
+5. **Identify the limits** of the approach and the directions to improve it.
+
+### Key numbers
+
+| | |
+|---|---|
+| Image size | 2448 × 2448 px = **5,992,704 pixels** |
+| Ground-truth classes | **4** (largest: 57.42 % of the pixels) |
+| Clusters tested | k = 2, 3, 4, 5, 6 |
+| Fuzziness index / tolerance | m = 1.7 / ε = 1e-5 |
+| Iterations to converge | from **39** (k = 2) to **271** (k = 6) |
+| Best accuracy | **52.55 %** (k = 4) |
+| Code | one main notebook (vectorised NumPy) + 3 preliminary experiments |
+| Documentation | 4 documents, in English and French |
+
+## Visual walkthrough
+
+The figures below follow one run of the pipeline on tile 606.
+
+### 1. The input: a satellite tile and its ground truth
+
+<p align="center">
+  <img src="docs/figures/input_image_and_mask.png" alt="Satellite tile and ground-truth mask" width="85%">
+</p>
+
+Farmland on the left, a large water body on the right, a thin coastal strip in between. The mask has four colour-coded classes: blue (39.95 %), yellow (57.42 %), magenta (1.79 %) and white (0.84 %).
+
+### 2. Pre-processing: grayscale and Gaussian blur
+
+<p align="center">
+  <img src="docs/figures/preprocessing_gray_vs_blur.png" alt="Grayscale image before and after Gaussian blur" width="85%">
+</p>
+
+The RGB tile is reduced to one intensity per pixel, then smoothed with a 5 × 5 Gaussian kernel to attenuate noise while keeping the main edges. Intensities then range from 24 to 254 and are normalised to [0, 1].
+
+### 3. What Fuzzy C-Means actually sees
+
+<p align="center">
+  <img src="docs/figures/intensity_histogram_centroids.png" alt="Histogram of pixel intensities with the final centroids" width="85%">
+</p>
+
+The algorithm clusters **one number per pixel**. The histogram shows a dominant peak around 0.4 and a long tail towards bright values; the dashed lines are the six centroids found for k = 6 (converged after 271 iterations). Several centroids fall inside the main peak, which is why the regions come out speckled.
+
+### 4. Why the accuracy is limited: the classes overlap in intensity
+
+<p align="center">
+  <img src="docs/figures/class_intensity_distributions.png" alt="Intensity distribution of each ground-truth class" width="85%">
+</p>
+
+The two largest classes have almost the same mean intensity (**0.408** for the blue class, **0.434** for the yellow one), so a single grayscale value cannot separate them reliably. This is the main structural reason for the modest accuracy, beyond the algorithm itself.
+
+### 5. The result against the ground truth (k = 4)
+
+<p align="center">
+  <img src="docs/figures/segmentation_k4_vs_ground_truth.png" alt="Fuzzy C-Means segmentation with k=4 next to the ground-truth mask" width="85%">
+</p>
+
+The water body and the coastline are recovered; the farmland is fragmented into many small regions because its intensities overlap those of other classes. *(Capture from an experiment run; titles are in French: "Image segmentée par FCM" = FCM-segmented image, "Masque original" = ground-truth mask.)*
+
+> Images shown in the figures come from tile 606 of a public land-cover dataset distributed under the MIT licence (see [`data/README.md`](data/README.md)).
+
+### What this project demonstrates
+
+- **Machine learning fundamentals**: unsupervised learning, soft clustering, objective-function optimisation, convergence analysis.
+- **Algorithm implementation**: translating the mathematics into vectorised NumPy that scales to six million samples.
+- **Computer vision and remote sensing**: image pre-processing, segmentation, handling of satellite imagery.
+- **Experimental rigour**: ground-truth evaluation, optimal label matching, a parameter study, and an honest analysis of the metric's limits.
+- **Scientific communication**: a structured thesis and bilingual technical documentation.
+
 ## Highlights
 
 - **Fuzzy C-Means implemented from scratch**, first with pixel loops, then **vectorised with NumPy** so it runs on ~6 million pixels.

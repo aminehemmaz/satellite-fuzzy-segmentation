@@ -2,7 +2,7 @@
 
 🇬🇧 English · [🇫🇷 Français](#données)
 
-This folder is intentionally empty: **no image or mask is redistributed** in this repository.
+This folder is intentionally empty: the input image and mask are **not stored** in this repository. Only illustrative figures showing tile 606 (satellite image, mask, grayscale, histograms) are included in [`docs/figures/`](../docs/figures); the dataset is distributed under the MIT licence (see below).
 
 ## What the main notebook expects
 
@@ -35,7 +35,7 @@ The synthetic image used for the sanity check (`assets/synthetic_shapes.png`) wa
 
 [🇬🇧 English](#data) · 🇫🇷 Français
 
-Ce dossier est volontairement vide : **aucune image ni aucun masque n'est redistribué** dans ce dépôt.
+Ce dossier est volontairement vide : l'image d'entrée et le masque ne sont **pas stockés** dans ce dépôt. Seules des figures illustratives montrant la tuile 606 (image satellite, masque, niveaux de gris, histogrammes) figurent dans [`docs/figures/`](../docs/figures) ; le jeu de données est distribué sous licence MIT (voir plus bas).
 
 ## Ce qu'attend le notebook principal
 

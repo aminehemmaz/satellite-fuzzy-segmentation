@@ -39,6 +39,85 @@ Le travail couvre toute la démarche scientifique : état de l'art sur les satel
 | **Évaluation** | Accuracy pixel à pixel après appariement optimal (hongrois) des étiquettes, pour k = 2 … 6 |
 | **Meilleur réglage** | k = 4 clusters → accuracy de **52,55 %** |
 
+### Motivation
+
+Les satellites d'observation de la Terre produisent d'énormes volumes d'images utilisées en agriculture, foresterie, urbanisme, suivi du climat et gestion des catastrophes. Transformer les pixels bruts en régions (eau, champs, zones bâties, sols nus) est la première étape de la plupart de ces applications. Les méthodes supervisées exigent de grands jeux de données annotés ; le **clustering non supervisé** n'en demande aucun. Et comme les frontières naturelles sont progressives (un littoral, le bord d'une culture, une ombre), une affectation **souple** est plus fidèle qu'une affectation dure.
+
+### Objectifs
+
+1. Comprendre et documenter les **fondements** : satellites, capteurs, télédétection, segmentation d'images, logique floue.
+2. **Implémenter le Fuzzy C-Means à partir de zéro** et le valider sur une image synthétique.
+3. **L'appliquer à une tuile satellite réelle** et **mesurer** le résultat sur une vérité terrain au niveau du pixel.
+4. **Étudier l'influence du nombre de clusters** `k` sur la convergence, l'accuracy et la qualité visuelle.
+5. **Identifier les limites** de l'approche et les pistes pour l'améliorer.
+
+### Chiffres clés
+
+| | |
+|---|---|
+| Taille de l'image | 2448 × 2448 px = **5 992 704 pixels** |
+| Classes de vérité terrain | **4** (la plus grande : 57,42 % des pixels) |
+| Clusters testés | k = 2, 3, 4, 5, 6 |
+| Indice de flou / tolérance | m = 1,7 / ε = 1e-5 |
+| Itérations jusqu'à convergence | de **39** (k = 2) à **271** (k = 6) |
+| Meilleure accuracy | **52,55 %** (k = 4) |
+| Code | un notebook principal (NumPy vectorisé) + 3 expériences préliminaires |
+| Documentation | 4 documents, en français et en anglais |
+
+## Parcours visuel
+
+Les figures suivantes suivent une exécution de la chaîne de traitement sur la tuile 606.
+
+### 1. L'entrée : une tuile satellite et sa vérité terrain
+
+<p align="center">
+  <img src="docs/figures/input_image_and_mask_fr.png" alt="Tuile satellite et masque de vérité terrain" width="85%">
+</p>
+
+Des terres agricoles à gauche, une grande étendue d'eau à droite, une fine bande côtière entre les deux. Le masque comporte quatre classes colorées : bleue (39,95 %), jaune (57,42 %), magenta (1,79 %) et blanche (0,84 %).
+
+### 2. Prétraitement : niveaux de gris et flou gaussien
+
+<p align="center">
+  <img src="docs/figures/preprocessing_gray_vs_blur_fr.png" alt="Image en niveaux de gris avant et après flou gaussien" width="85%">
+</p>
+
+La tuile RVB est réduite à une intensité par pixel, puis lissée avec un noyau gaussien 5 × 5 pour atténuer le bruit en conservant les contours principaux. Les intensités vont alors de 24 à 254 et sont normalisées dans [0, 1].
+
+### 3. Ce que le Fuzzy C-Means voit réellement
+
+<p align="center">
+  <img src="docs/figures/intensity_histogram_centroids_fr.png" alt="Histogramme des intensités des pixels avec les centres finaux" width="85%">
+</p>
+
+L'algorithme regroupe **un seul nombre par pixel**. L'histogramme montre un pic dominant autour de 0,4 et une longue queue vers les valeurs claires ; les traits pointillés sont les six centres trouvés pour k = 6 (convergence après 271 itérations). Plusieurs centres tombent dans le pic principal, ce qui explique l'aspect moucheté des régions.
+
+### 4. Pourquoi l'accuracy est limitée : les classes se recouvrent en intensité
+
+<p align="center">
+  <img src="docs/figures/class_intensity_distributions_fr.png" alt="Distribution des intensités de chaque classe de la vérité terrain" width="85%">
+</p>
+
+Les deux plus grandes classes ont presque la même intensité moyenne (**0,408** pour la classe bleue, **0,434** pour la jaune) : une seule valeur de gris ne peut donc pas les séparer de façon fiable. C'est la principale raison structurelle de l'accuracy modeste, au-delà de l'algorithme lui-même.
+
+### 5. Le résultat face à la vérité terrain (k = 4)
+
+<p align="center">
+  <img src="docs/figures/segmentation_k4_vs_ground_truth.png" alt="Segmentation Fuzzy C-Means avec k=4 à côté du masque de vérité terrain" width="85%">
+</p>
+
+L'étendue d'eau et le littoral sont retrouvés ; les terres agricoles sont fragmentées en nombreuses petites régions, car leurs intensités recouvrent celles d'autres classes. *(Capture issue d'une exécution d'expérience.)*
+
+> Les images des figures proviennent de la tuile 606 d'un jeu de données public d'occupation des sols, distribué sous licence MIT (voir [`data/README.md`](data/README.md)).
+
+### Ce que ce projet démontre
+
+- **Fondamentaux du machine learning** : apprentissage non supervisé, clustering flou, optimisation d'une fonction objectif, analyse de la convergence.
+- **Implémentation d'algorithmes** : traduire les mathématiques en NumPy vectorisé capable de traiter six millions d'échantillons.
+- **Vision par ordinateur et télédétection** : prétraitement d'images, segmentation, manipulation d'imagerie satellitaire.
+- **Rigueur expérimentale** : évaluation sur vérité terrain, appariement optimal des étiquettes, étude de paramètres et analyse honnête des limites de la métrique.
+- **Communication scientifique** : un mémoire structuré et une documentation technique bilingue.
+
 ## Points forts
 
 - **Fuzzy C-Means implémenté à partir de zéro**, d'abord avec des boucles sur les pixels, puis **vectorisé avec NumPy** pour traiter ~6 millions de pixels.
